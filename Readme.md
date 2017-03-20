@@ -34,5 +34,6 @@ def save_info(x_dev, y_dev, y_net, prob_net, layer, path_):
 ```
 
 you can also check the jupyter notebook where a version of an LSTM fully connected
-layer from [SST](https://nlp.stanford.edu/sentiment/index.html) is plotted
+layer from [SST](https://nlp.stanford.edu/sentiment/index.html) is plotted. So far the
+two plots of the paragraph `Exploring the innards` are only implemented
 

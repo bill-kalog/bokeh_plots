@@ -7,7 +7,7 @@ import numpy as np
 import pickle
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure, show, save
-from bokeh.io import hplot
+from bokeh.layouts import row
 from bokeh.models import HoverTool
 # from bokeh.io import output_notebook
 # output_notebook()
@@ -121,6 +121,7 @@ plot = figure(
 
 for ind_ in range(len(INDICES)):
     if len(tsne_repr[INDICES[ind_]]) > 0:
+
         source = ColumnDataSource(
             data=dict(
                 x=tsne_repr[INDICES[ind_]][:,0],
@@ -173,7 +174,7 @@ hover = HoverTool(
 
 TOOLS = ["pan,wheel_zoom,box_zoom,reset,save, crosshair",hover]
 # (was , predicted) -- (line, filling) -- blue - > positive, red -> negative
-COLORS_2 = [('blue','blue'), ('red','red'), ('red','blue'), ('blue','red')]
+# COLORS_2 = [('blue','blue'), ('red','red'), ('red','blue'), ('blue','red')]
 COLORS = [('black',c[0]), ('black',c[1]), ('black',c[2]), ('black',c[3])]
 LEGEND = ['very confident', 'confident', 'Doubtful', 'very Doubtful']
 INDICES = [vconf_ind, conf_ind, doubt_ind, vdoubt_ind]
@@ -191,19 +192,20 @@ for ind_ in range(len(INDICES)):
                 desc=np.asarray(df.get('x_dev'))[INDICES[ind_]],
                 prob=np.asarray(df.get('prob_net'))[INDICES[ind_]],
                 label=np.asarray(df.get('y_dev'))[INDICES[ind_]],
-                label_color=[COLORS_2[ind_][0]]*len(tsne_repr[INDICES[ind_]][:,0])
-
+                label_color=[['red', 'blue'][color_] for color_ in 
+                    np.asarray(df.get('y_dev'))[INDICES[ind_]]]
             )
         )
         plot_2.circle(
             x='x', y='y', size=size_, source=source,
-            color=COLORS[ind_][1], fill_alpha=fill_alpha_, line_width=line_width_, line_color=COLORS[ind_][0],
+            color=COLORS[ind_][1], fill_alpha=fill_alpha_,
+            line_width=line_width_, line_color=COLORS[ind_][0],
             legend=LEGEND[ind_])
 
 
 
 
 
-p = hplot(plot, plot_2)
+p = row(plot, plot_2)
 # show(p)
 save(p, "plot.html")
