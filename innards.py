@@ -7,6 +7,7 @@ import numpy as np
 import pickle
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure, show, save
+from bokeh.io import hplot
 from bokeh.models import HoverTool
 # from bokeh.io import output_notebook
 # output_notebook()
@@ -53,44 +54,156 @@ for i_, val_ in enumerate(y_dev):
             fp_ind.append(i_)
 
 
+# asses probabilities
+# probability indexing, check networks confidence on decision
+vconf_ = []  # very confident
+vconf_ind = []
+conf_ = []  # confident
+conf_ind = []
+doubt_ = []  # doubtful
+doubt_ind = []
+vdoubt_ = []  # very doubtful
+vdoubt_ind = []
+step_ = [0.5 / 4] * 4  # steps to add in each iteration
+start_ = 0.5
+for i_, val_ in enumerate(y_dev):
+    net_confidence = max(df.get('prob_net')[i_])
+    if net_confidence < start_ + sum(step_[:1]):
+        vdoubt_ind.append(i_)
+    elif net_confidence < start_ + sum(step_[:2]):
+        doubt_ind.append(i_)
+    elif net_confidence < start_ + sum(step_[:3]):
+        conf_ind.append(i_)
+    else:
+        vconf_ind.append(i_)
+
 # build bokeh plot
 size_ = 10
 line_width_ = 2
 fill_alpha_ = 0.7
 # parametrize more hover @ http://bokeh.pydata.org/en/latest/docs/user_guide/tools.html#custom-tooltip
 hover = HoverTool(
-    tooltips=[
-        ("(x,y)", "(@x, @y)"), ("sentence", "@desc"), ("prob", "@prob")]
-)
+        tooltips=[
+            ("(x,y)", "(@x, @y)"),
+            ("sentence", "@desc"),
+            ("(neg, pos)", "@prob"),
+            ("label", "@label")
+        ]
+    )
+
+colors_ = ['red', 'blue']
+
+hover = HoverTool(
+        tooltips="""
+        <div>
+            <div>
+                <span style="font-size: 15px;">(neg, pos)</span>
+                <span style="font-size: 15px; font-weight: bold;">@prob</span>
+            </div>
+            <div>
+                <span style="font-size: 15px;">sentence: </span>
+                <span style="font-size: 17px; color: @label_color;">@desc</span>
+            </div>
+        </div>
+        """
+    )
 
 TOOLS = ["pan,wheel_zoom,box_zoom,reset,save, crosshair", hover]
 # (was , predicted) -- (line, filling) -- blue - > positive, red -> negative
-COLORS = [('blue', 'blue'), ('red', 'red'), ('red', 'blue'), ('blue', 'red')]
+COLORS = [('blue','blue'), ('red','red'), ('red','blue'), ('blue','red')]
 LEGEND = ['true positive', 'true negative', 'false positive', 'false negative']
 INDICES = [tp_ind, tn_ind, fp_ind, fn_ind]
 
 plot = figure(
     title="FC network layer", tools=TOOLS,
-    x_axis_location=None, y_axis_location=None)
+    x_axis_location=None, y_axis_location=None, width=800, height=800)
 # plot = figure(width=400, height=400)
 
 for ind_ in range(len(INDICES)):
     if len(tsne_repr[INDICES[ind_]]) > 0:
         source = ColumnDataSource(
             data=dict(
-                x=tsne_repr[INDICES[ind_]][:, 0],
-                y=tsne_repr[INDICES[ind_]][:, 1],
+                x=tsne_repr[INDICES[ind_]][:,0],
+                y=tsne_repr[INDICES[ind_]][:,1],
                 desc=np.asarray(df.get('x_dev'))[INDICES[ind_]],
-                prob=np.asarray(df.get('prob_net'))[INDICES[ind_]]
+                prob=np.asarray(df.get('prob_net'))[INDICES[ind_]],
+                label=np.asarray(df.get('y_dev'))[INDICES[ind_]],
+                label_color=[COLORS[ind_][0]] * 
+                    len(tsne_repr[INDICES[ind_]][:, 0])
+
             )
         )
         plot.circle(
             x='x', y='y', size=size_, source=source,
-            color=COLORS[ind_][1], fill_alpha=fill_alpha_,
-            line_width=line_width_, line_color=COLORS[ind_][0],
+            color=COLORS[ind_][1], fill_alpha=fill_alpha_, line_width=line_width_, line_color=COLORS[ind_][0],
+            legend=LEGEND[ind_])
+
+
+c = ['blue', 'cyan', 'grey', '#eff3ff']
+size_ = 10
+line_width_ = 2
+fill_alpha_ = 0.7
+# parametrize more hover @ http://bokeh.pydata.org/en/latest/docs/user_guide/tools.html#custom-tooltip
+hover = HoverTool(
+        tooltips=[
+            #("index", "$index"),
+            ("(x,y)", "(@x, @y)"),
+            ("sentence", "@desc"),
+            ("(neg, pos)", "@prob"),
+            ("label", "@label")
+        ]
+    )
+
+colors_ = ['red', 'blue']
+
+hover = HoverTool(
+        tooltips="""
+        <div>
+            <div>
+                <span style="font-size: 15px;">(neg, pos)</span>
+                <span style="font-size: 15px; font-weight: bold;">(@prob)</span>
+            </div>
+            <div>
+                <span style="font-size: 15px;">sentence: </span>
+                <span style="font-size: 17px; color: @label_color;">@desc</span>
+            </div>
+        </div>
+        """
+    )
+
+TOOLS = ["pan,wheel_zoom,box_zoom,reset,save, crosshair",hover]
+# (was , predicted) -- (line, filling) -- blue - > positive, red -> negative
+COLORS_2 = [('blue','blue'), ('red','red'), ('red','blue'), ('blue','red')]
+COLORS = [('black',c[0]), ('black',c[1]), ('black',c[2]), ('black',c[3])]
+LEGEND = ['very confident', 'confident', 'Doubtful', 'very Doubtful']
+INDICES = [vconf_ind, conf_ind, doubt_ind, vdoubt_ind]
+
+plot_2 = figure(title="FC network layer", tools=TOOLS,
+           x_axis_location=None, y_axis_location=None, width=800, height=800)
+# plot = figure(width=400, height=400)
+
+for ind_ in range(len(INDICES)):
+    if len(tsne_repr[INDICES[ind_]]) > 0:
+        source = ColumnDataSource(
+            data=dict(
+                x=tsne_repr[INDICES[ind_]][:,0],
+                y=tsne_repr[INDICES[ind_]][:,1],
+                desc=np.asarray(df.get('x_dev'))[INDICES[ind_]],
+                prob=np.asarray(df.get('prob_net'))[INDICES[ind_]],
+                label=np.asarray(df.get('y_dev'))[INDICES[ind_]],
+                label_color=[COLORS_2[ind_][0]]*len(tsne_repr[INDICES[ind_]][:,0])
+
+            )
+        )
+        plot_2.circle(
+            x='x', y='y', size=size_, source=source,
+            color=COLORS[ind_][1], fill_alpha=fill_alpha_, line_width=line_width_, line_color=COLORS[ind_][0],
             legend=LEGEND[ind_])
 
 
 
-show(plot)
-save(plot, "plot.html")
+
+
+p = hplot(plot, plot_2)
+# show(p)
+save(p, "plot.html")
