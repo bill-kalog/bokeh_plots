@@ -7,6 +7,7 @@ import numpy as np
 import pickle
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure, show, save
+from bokeh.models.widgets import Panel, Tabs
 from bokeh.layouts import row
 from bokeh.models import HoverTool
 # from bokeh.io import output_notebook
@@ -138,7 +139,7 @@ for ind_ in range(len(INDICES)):
             x='x', y='y', size=size_, source=source,
             color=COLORS[ind_][1], fill_alpha=fill_alpha_, line_width=line_width_, line_color=COLORS[ind_][0],
             legend=LEGEND[ind_])
-
+tab1 = Panel(child=plot, title="Predictions")
 
 c = ['blue', 'cyan', 'grey', '#eff3ff']
 size_ = 10
@@ -201,11 +202,10 @@ for ind_ in range(len(INDICES)):
             color=COLORS[ind_][1], fill_alpha=fill_alpha_,
             line_width=line_width_, line_color=COLORS[ind_][0],
             legend=LEGEND[ind_])
+tab2 = Panel(child=plot_2, title="Probabilities")
+tabs = Tabs(tabs=[ tab1, tab2 ])
 
 
 
-
-
-p = row(plot, plot_2)
-# show(p)
-save(p, "plot.html")
+# show(tabs)
+save(tabs, "plot.html")
