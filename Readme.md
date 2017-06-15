@@ -16,7 +16,7 @@ in the blog post [Learning when to skim and when to read](https://metamind.io/re
 the script `innards.py` expects a pandas dataframe similar to the one found in
 `metrics.pkl`. which could have been created from something like:
 
-```
+```python
 def save_info(x_dev, y_dev, y_net, prob_net, layer, path_):
     '''
     save test set info into a pandas dataframe and pickle it
@@ -37,3 +37,5 @@ you can also check the jupyter notebook where a version of an LSTM fully connect
 layer from [SST](https://nlp.stanford.edu/sentiment/index.html) is plotted. So far the
 two plots of the paragraph `Exploring the innards` are only implemented
 
+Usising the script `innards_finegrained.py` one can plot in space more than two classes.
+An example dataset exists at `metrics_f.pkl` and the program's output at `plot_finegrained.html`.
